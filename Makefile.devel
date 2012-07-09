@@ -27,34 +27,11 @@ INCLUDES_DIR=include
 # i386, ia64, ppc, and x86_64
 SUBARCH?=i386
 
-# Additional variables for correctly compiling the kernel
-export CFLAGS+=-I$(CURDIR)/$(INCLUDES_DIR)/usr/include
-export LDFLAGS+=-L$(CURDIR)/$(INCLUDES_DIR)/usr/lib
-
 # Kernel release
-KERNEL_RELEASE?=2.6.26.5
+KERNEL_RELEASE?=2.6.35.13
 
 # URL of the kernel tarball, if required
 KERNEL_URL=http://www.kernel.org/pub/linux/kernel/v2.6/linux-$(KERNEL_RELEASE).tar.bz2
-
-# Debian archive mirror, used to get architecture-specific development files
-DEBIAN_MIRROR?=http://ftp.it.debian.org/debian/
-
-# Names of additional, architecture-specific packages to be downloaded
-ifeq ($(SUBARCH),ppc)
-DEBIAN_DEV_PACKAGES=pool/main/libp/libpcap/libpcap0.8-dev_0.9.8-5_powerpc.deb pool/main/v/vde2/libvdeplug2-dev_2.2.2-3_powerpc.deb
-else ifeq ($(SUBARCH),x86_64)
-DEBIAN_DEV_PACKAGES=pool/main/libp/libpcap/libpcap0.8-dev_0.9.8-5_amd64.deb pool/main/v/vde2/libvdeplug2-dev_2.2.2-3_amd64.deb
-else
-DEBIAN_DEV_PACKAGES=pool/main/libp/libpcap/libpcap0.8-dev_0.9.8-5_$(SUBARCH).deb pool/main/v/vde2/libvdeplug2-dev_2.2.2-3_$(SUBARCH).deb
-endif
-
-
-
-
-
-
-
 
 ##############################################################################
 ## Settings below these lines should in general never be touched.
@@ -97,25 +74,12 @@ help:
 kernel: netkit-kernel
 
 .SILENT: netkit-kernel
-netkit-kernel: $(BUILD_DIR)/.patched $(BUILD_DIR)/$(KERNEL_DIR)/.config $(INCLUDES_DIR)/usr
+netkit-kernel: $(BUILD_DIR)/.patched $(BUILD_DIR)/$(KERNEL_DIR)/.config 
 	echo -e "\n\e[1m\e[32m========= Compiling the kernel... ========\e[0m"
 	+$(MAKE) -C $(BUILD_DIR)/$(KERNEL_DIR)/ all modules modules_install ARCH=um SUBARCH=$(SUBARCH) INSTALL_MOD_PATH="$(CURDIR)/$(MODULES_DIR)"
 	rm -f $(MODULES_DIR)/lib/modules/*/{source,build}
 	cp $(BUILD_DIR)/$(KERNEL_DIR)/linux netkit-kernel-$(SUBARCH)-$(KERNEL_RELEASE)-$(NK_KERNEL_RELEASE)
 	ln -fs netkit-kernel-$(SUBARCH)-$(KERNEL_RELEASE)-$(NK_KERNEL_RELEASE) netkit-kernel
-
-.SILENT: $(INCLUDES_DIR)/usr
-$(INCLUDES_DIR)/usr: $(notdir $(DEBIAN_DEV_PACKAGES))
-	echo -e "\n\e[1m\e[32m==== Unpacking development packages... ===\e[0m"
-	for PACKAGE in $?; do \
-		dpkg-deb -x $${PACKAGE} $(INCLUDES_DIR); \
-	done
-	# Make sure the $(INCLUDES_DIR)/usr is newer than the prerequisites
-	touch $(INCLUDES_DIR)/usr
-
-.SILENT: %.deb
-%.deb:
-	wget $(DEBIAN_MIRROR)/$(filter %/$@,$(DEBIAN_DEV_PACKAGES))
 
 .SILENT: $(BUILD_DIR)/.patched
 $(BUILD_DIR)/.patched: $(BUILD_DIR)/.unpacked
