@@ -1,0 +1,11 @@
+--- linux-2.6.35.8-lgmrvl.orig/arch/um/drivers/daemon_user.c	2012-05-21 21:42:51.524001892 +0300
++++ linux-2.6.35.8-lgmrvl/arch/um/drivers/daemon_user.c	2012-06-28 13:50:56.364001894 +0300
+@@ -26,7 +25,7 @@
+ struct request_v3 {
+ 	uint32_t magic;
+ 	uint32_t version;
+-	enum request_type type;
++	uint32_t type;
+ 	struct sockaddr_un sock;
+ };
+ 
