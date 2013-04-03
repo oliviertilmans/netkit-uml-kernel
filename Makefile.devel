@@ -25,13 +25,14 @@ INCLUDES_DIR=include
 
 # Target architecture of the UML kernel binary file. Valid values include:
 # i386, ia64, ppc, and x86_64
-SUBARCH?=i386
+SUBARCH?=x86_64
 
 # Kernel release
-KERNEL_RELEASE?=2.6.35.13
+KERNEL_RELEASE?=3.4.38
 
 # URL of the kernel tarball, if required
-KERNEL_URL=http://www.kernel.org/pub/linux/kernel/v2.6/linux-$(KERNEL_RELEASE).tar.bz2
+KERNEL_SUFFIX=.tar.xz
+KERNEL_URL=http://www.kernel.org/pub/linux/kernel/v3.x/linux-$(KERNEL_RELEASE)$(KERNEL_SUFFIX)
 
 ##############################################################################
 ## Settings below these lines should in general never be touched.
@@ -40,8 +41,8 @@ KERNEL_URL=http://www.kernel.org/pub/linux/kernel/v2.6/linux-$(KERNEL_RELEASE).t
 # The CDPATH environment variable can cause problems 
 override CDPATH=
 NK_KERNEL_RELEASE=$(shell awk '/kernel version/ {print $$NF}' netkit-kernel-version)
-KERNEL_PACKAGE=linux-$(KERNEL_RELEASE).tar.bz2
-KERNEL_DIR=$(patsubst %.tar.bz2,%,$(KERNEL_PACKAGE))
+KERNEL_PACKAGE=linux-$(KERNEL_RELEASE)$(KERNEL_SUFFIX)
+KERNEL_DIR=$(patsubst %$(KERNEL_SUFFIX),%,$(KERNEL_PACKAGE))
 
 default: help
 
@@ -51,7 +52,7 @@ help:
 	@echo -e "\e[1mAvailable targets are:\e[0m"
 	@echo
 	@echo -e "  \e[1mkernel\e[0m     Build a Netkit kernel. The current directory must contain"
-	@echo "             the source .tar.bz2 package for vanilla kernel $(KERNEL_RELEASE)."
+	@echo "             the source $(KERNEL_SUFFIX) package for vanilla kernel $(KERNEL_RELEASE)."
 	@echo "             If no such package is available, the makefile will attempt"
 	@echo "             to automatically download one. Other files required for the"
 	@echo "             build will be automatically downloaded too."
@@ -98,7 +99,7 @@ $(BUILD_DIR)/$(KERNEL_DIR)/.config: netkit-kernel-config-$(SUBARCH) $(BUILD_DIR)
 $(BUILD_DIR)/.unpacked: $(KERNEL_PACKAGE)
 	echo -e "\n\e[1m\e[32m======== Unpacking the kernel... =========\e[0m"
 	mkdir -p $(BUILD_DIR)
-	tar -C $(BUILD_DIR) -xjf $(KERNEL_PACKAGE)
+	unxz < $(KERNEL_PACKAGE) | tar -C $(BUILD_DIR) -xf -
 	: > $(BUILD_DIR)/.unpacked
 
 $(KERNEL_PACKAGE):
