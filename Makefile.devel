@@ -28,7 +28,16 @@ INCLUDES_DIR=include
 SUBARCH?=x86_64
 
 # Kernel release
-KERNEL_RELEASE?=3.4.38
+
+# 3.4 stable series
+#KERNEL_RELEASE?=3.4.38
+# 3.4.38 has bug with ubda option handling (latest as of 2013-04-03)
+# c.f. http://comments.gmane.org/gmane.linux.uml.devel/13556 ..
+# (we have ugly workaround, see patches/34-boot-parameter-mangling.diff)
+
+# 3.8 stable
+# .. seems to have same problem. sigh.
+KERNEL_RELEASE?=3.8.5
 
 # URL of the kernel tarball, if required
 KERNEL_SUFFIX=.tar.xz
@@ -38,7 +47,7 @@ KERNEL_URL=http://www.kernel.org/pub/linux/kernel/v3.x/linux-$(KERNEL_RELEASE)$(
 ## Settings below these lines should in general never be touched.
 ##############################################################################
 
-# The CDPATH environment variable can cause problems 
+# The CDPATH environment variable can cause problems
 override CDPATH=
 NK_KERNEL_RELEASE=$(shell awk '/kernel version/ {print $$NF}' netkit-kernel-version)
 KERNEL_PACKAGE=linux-$(KERNEL_RELEASE)$(KERNEL_SUFFIX)
@@ -75,9 +84,11 @@ help:
 kernel: netkit-kernel
 
 .SILENT: netkit-kernel
-netkit-kernel: $(BUILD_DIR)/.patched $(BUILD_DIR)/$(KERNEL_DIR)/.config 
+netkit-kernel: $(BUILD_DIR)/.patched $(BUILD_DIR)/$(KERNEL_DIR)/.config
 	echo -e "\n\e[1m\e[32m========= Compiling the kernel... ========\e[0m"
-	+$(MAKE) -C $(BUILD_DIR)/$(KERNEL_DIR)/ all modules modules_install ARCH=um SUBARCH=$(SUBARCH) INSTALL_MOD_PATH="$(CURDIR)/$(MODULES_DIR)"
+	+$(MAKE) -C $(BUILD_DIR)/$(KERNEL_DIR)/ all ARCH=um SUBARCH=$(SUBARCH) INSTALL_MOD_PATH="$(CURDIR)/$(MODULES_DIR)"
+	+$(MAKE) -C $(BUILD_DIR)/$(KERNEL_DIR)/ modules ARCH=um SUBARCH=$(SUBARCH) INSTALL_MOD_PATH="$(CURDIR)/$(MODULES_DIR)"
+	+$(MAKE) -C $(BUILD_DIR)/$(KERNEL_DIR)/ modules_install ARCH=um SUBARCH=$(SUBARCH) INSTALL_MOD_PATH="$(CURDIR)/$(MODULES_DIR)"
 	rm -f $(MODULES_DIR)/lib/modules/*/{source,build}
 	cp $(BUILD_DIR)/$(KERNEL_DIR)/linux netkit-kernel-$(SUBARCH)-$(KERNEL_RELEASE)-$(NK_KERNEL_RELEASE)
 	ln -fs netkit-kernel-$(SUBARCH)-$(KERNEL_RELEASE)-$(NK_KERNEL_RELEASE) netkit-kernel
