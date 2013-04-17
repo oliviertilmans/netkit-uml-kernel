@@ -1,3 +1,7 @@
+K2.9
+  - Fixing invalid paths in Makefile.devel (Babazka)
+  - Package building has a dedicated directory (build/package)
+
 K2.8
   - Instructions for building a custom filesystem image have been moved from
     the netkit-kernel (7) man page to the README file.
