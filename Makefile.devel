@@ -22,6 +22,7 @@ BUILD_DIR=build
 MODULES_DIR=modules
 PATCHES_DIR=patches
 INCLUDES_DIR=include
+PACKAGE_DIR=package
 
 # Target architecture of the UML kernel binary file. Valid values include:
 # i386, ia64, ppc, and x86_64
@@ -99,10 +100,11 @@ kernel: netkit-kernel
 .SILENT: netkit-kernel
 netkit-kernel: $(BUILD_DIR)/.patched $(BUILD_DIR)/$(KERNEL_DIR)/.config $(INCLUDES_DIR)/usr
 	echo -e "\n\e[1m\e[32m========= Compiling the kernel... ========\e[0m"
-	+$(MAKE) -C $(BUILD_DIR)/$(KERNEL_DIR)/ all modules modules_install ARCH=um SUBARCH=$(SUBARCH) INSTALL_MOD_PATH="$(CURDIR)/$(MODULES_DIR)"
+	mkdir -p $(BUILD_DIR)/$(PACKAGE_DIR)/netkit/kernel
+	+$(MAKE) -C $(BUILD_DIR)/$(KERNEL_DIR)/ all modules modules_install ARCH=um SUBARCH=$(SUBARCH) INSTALL_MOD_PATH="../../$(BUILD_DIR)/$(PACKAGE_DIR)/netkit/kernel/$(MODULES_DIR)"
 	rm -f $(MODULES_DIR)/lib/modules/*/{source,build}
-	cp $(BUILD_DIR)/$(KERNEL_DIR)/linux netkit-kernel-$(SUBARCH)-$(KERNEL_RELEASE)-$(NK_KERNEL_RELEASE)
-	ln -fs netkit-kernel-$(SUBARCH)-$(KERNEL_RELEASE)-$(NK_KERNEL_RELEASE) netkit-kernel
+	cp $(BUILD_DIR)/$(KERNEL_DIR)/linux $(BUILD_DIR)/$(PACKAGE_DIR)/netkit/kernel/netkit-kernel-$(SUBARCH)-$(KERNEL_RELEASE)-$(NK_KERNEL_RELEASE)
+	ln -fs netkit-kernel-$(SUBARCH)-$(KERNEL_RELEASE)-$(NK_KERNEL_RELEASE) $(BUILD_DIR)/$(PACKAGE_DIR)/netkit/kernel/netkit-kernel
 
 .SILENT: $(INCLUDES_DIR)/usr
 $(INCLUDES_DIR)/usr: $(notdir $(DEBIAN_DEV_PACKAGES))
@@ -145,7 +147,8 @@ $(KERNEL_PACKAGE):
 package: ../netkit-kernel-$(NK_KERNEL_RELEASE).tar.bz2
 
 ../netkit-kernel-$(NK_KERNEL_RELEASE).tar.bz2: netkit-kernel
-	tar --exclude=".*" --exclude="CVS" --exclude=".svn" --exclude="$(BUILD_DIR)" --exclude="$(INCLUDES_DIR)" --exclude="*.tar.bz2" --exclude="*.tar.gz" --exclude="*.deb" -C ../.. -cjf ../netkit-kernel-$(SUBARCH)-$(NK_KERNEL_RELEASE).tar.bz2 netkit/kernel
+	cp -rf README CHANGES Makefile.devel netkit-kernel-version netkit-kernel-config-i386 netkit-kernel-config-x86_64 patches/ $(BUILD_DIR)/$(PACKAGE_DIR)/netkit/kernel/
+	tar -C $(BUILD_DIR)/$(PACKAGE_DIR) -cjf ../netkit-kernel-$(SUBARCH)-$(NK_KERNEL_RELEASE).tar.bz2 netkit/kernel
 
 .PHONY: clean
 clean:
