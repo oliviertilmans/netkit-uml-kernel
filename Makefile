@@ -25,11 +25,11 @@ INCLUDES_DIR=include
 
 # Target architecture of the UML kernel binary file. Valid values include:
 # i386, ia64, ppc, and x86_64
-SUBARCH?=x86_64
+#SUBARCH?=x86_64
+SUBARCH?=i386
 
 # Kernel release
 KERNEL_RELEASE?=3.2.39
-
 
 # URL of the kernel tarball, if required
 KERNEL_SUFFIX=.tar.xz
@@ -84,19 +84,6 @@ netkit-kernel: $(BUILD_DIR)/.patched $(BUILD_DIR)/$(KERNEL_DIR)/.config
 	rm -f $(MODULES_DIR)/lib/modules/*/{source,build}
 	cp $(BUILD_DIR)/$(KERNEL_DIR)/linux netkit-kernel-$(SUBARCH)-$(KERNEL_RELEASE)-$(NK_KERNEL_RELEASE)
 	ln -fs netkit-kernel-$(SUBARCH)-$(KERNEL_RELEASE)-$(NK_KERNEL_RELEASE) netkit-kernel
-
-.SILENT: $(INCLUDES_DIR)/usr
-$(INCLUDES_DIR)/usr: $(notdir $(DEBIAN_DEV_PACKAGES))
-	echo -e "\n\e[1m\e[32m==== Unpacking development packages... ===\e[0m"
-	for PACKAGE in $?; do \
-		dpkg-deb -x $${PACKAGE} $(INCLUDES_DIR); \
-	done
-	# Make sure the $(INCLUDES_DIR)/usr is newer than the prerequisites
-	touch $(INCLUDES_DIR)/usr
-
-.SILENT: %.deb
-%.deb:
-	wget $(DEBIAN_MIRROR)/$(filter %/$@,$(DEBIAN_DEV_PACKAGES))
 
 .SILENT: $(BUILD_DIR)/.patched
 $(BUILD_DIR)/.patched: $(BUILD_DIR)/.unpacked
