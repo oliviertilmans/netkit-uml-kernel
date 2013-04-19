@@ -114,7 +114,7 @@ $(KERNEL_PACKAGE):
 package: ../netkit-kernel-$(NK_KERNEL_RELEASE).tar.bz2
 
 ../netkit-kernel-$(NK_KERNEL_RELEASE).tar.bz2: netkit-kernel
-	cp -rf README CHANGES Makefile.devel netkit-kernel-version netkit-kernel-config-i386 netkit-kernel-config-x86_64 patches/ $(BUILD_DIR)/$(PACKAGE_DIR)/netkit/kernel/
+	cp -rf README CHANGES Makefile netkit-kernel-version netkit-kernel-config-i386 netkit-kernel-config-x86_64 patches/ $(BUILD_DIR)/$(PACKAGE_DIR)/netkit/kernel/
 	tar -C $(BUILD_DIR)/$(PACKAGE_DIR) -cjf ../netkit-kernel-$(SUBARCH)-$(NK_KERNEL_RELEASE).tar.bz2 netkit/kernel
 
 .PHONY: clean
