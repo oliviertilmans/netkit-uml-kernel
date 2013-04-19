@@ -22,50 +22,28 @@ BUILD_DIR=build
 MODULES_DIR=modules
 PATCHES_DIR=patches
 INCLUDES_DIR=include
-PACKAGE_DIR=package
 
 # Target architecture of the UML kernel binary file. Valid values include:
 # i386, ia64, ppc, and x86_64
-SUBARCH?=i386
-
-# Additional variables for correctly compiling the kernel
-export CFLAGS+=-I$(CURDIR)/$(INCLUDES_DIR)/usr/include
-export LDFLAGS+=-L$(CURDIR)/$(INCLUDES_DIR)/usr/lib
+SUBARCH?=x86_64
 
 # Kernel release
-KERNEL_RELEASE?=2.6.26
+KERNEL_RELEASE?=3.2.39
+
 
 # URL of the kernel tarball, if required
-KERNEL_URL=http://www.kernel.org/pub/linux/kernel/v2.6/linux-$(KERNEL_RELEASE).tar.bz2
-
-# Debian archive mirror, used to get architecture-specific development files
-DEBIAN_MIRROR?=http://ftp.it.debian.org/debian/
-
-# Names of additional, architecture-specific packages to be downloaded
-ifeq ($(SUBARCH),ppc)
-DEBIAN_DEV_PACKAGES=pool/main/libp/libpcap/libpcap0.8-dev_1.1.1-2+squeeze1_powerpc.deb pool/main/v/vde2/libvdeplug2-dev_2.2.3-3_powerpc.deb
-else ifeq ($(SUBARCH),x86_64)
-DEBIAN_DEV_PACKAGES=pool/main/libp/libpcap/libpcap0.8-dev_1.1.1-2+squeeze1_amd64.deb pool/main/v/vde2/libvdeplug2-dev_2.2.3-3_amd64.deb
-else
-DEBIAN_DEV_PACKAGES=pool/main/libp/libpcap/libpcap0.8-dev_1.1.1-2+squeeze1_$(SUBARCH).deb pool/main/v/vde2/libvdeplug2-dev_2.2.3-3_$(SUBARCH).deb
-endif
-
-
-
-
-
-
-
+KERNEL_SUFFIX=.tar.xz
+KERNEL_URL=http://www.kernel.org/pub/linux/kernel/v3.x/linux-$(KERNEL_RELEASE)$(KERNEL_SUFFIX)
 
 ##############################################################################
 ## Settings below these lines should in general never be touched.
 ##############################################################################
 
-# The CDPATH environment variable can cause problems 
+# The CDPATH environment variable can cause problems
 override CDPATH=
 NK_KERNEL_RELEASE=$(shell awk '/kernel version/ {print $$NF}' netkit-kernel-version)
-KERNEL_PACKAGE=linux-$(KERNEL_RELEASE).tar.bz2
-KERNEL_DIR=$(patsubst %.tar.bz2,%,$(KERNEL_PACKAGE))
+KERNEL_PACKAGE=linux-$(KERNEL_RELEASE)$(KERNEL_SUFFIX)
+KERNEL_DIR=$(patsubst %$(KERNEL_SUFFIX),%,$(KERNEL_PACKAGE))
 
 default: help
 
@@ -75,7 +53,7 @@ help:
 	@echo -e "\e[1mAvailable targets are:\e[0m"
 	@echo
 	@echo -e "  \e[1mkernel\e[0m     Build a Netkit kernel. The current directory must contain"
-	@echo "             the source .tar.bz2 package for vanilla kernel $(KERNEL_RELEASE)."
+	@echo "             the source $(KERNEL_SUFFIX) package for vanilla kernel $(KERNEL_RELEASE)."
 	@echo "             If no such package is available, the makefile will attempt"
 	@echo "             to automatically download one. Other files required for the"
 	@echo "             build will be automatically downloaded too."
@@ -98,13 +76,14 @@ help:
 kernel: netkit-kernel
 
 .SILENT: netkit-kernel
-netkit-kernel: $(BUILD_DIR)/.patched $(BUILD_DIR)/$(KERNEL_DIR)/.config $(INCLUDES_DIR)/usr
+netkit-kernel: $(BUILD_DIR)/.patched $(BUILD_DIR)/$(KERNEL_DIR)/.config
 	echo -e "\n\e[1m\e[32m========= Compiling the kernel... ========\e[0m"
-	mkdir -p $(BUILD_DIR)/$(PACKAGE_DIR)/netkit/kernel
-	+$(MAKE) -C $(BUILD_DIR)/$(KERNEL_DIR)/ all modules modules_install ARCH=um SUBARCH=$(SUBARCH) INSTALL_MOD_PATH="../../$(BUILD_DIR)/$(PACKAGE_DIR)/netkit/kernel/$(MODULES_DIR)"
+	+$(MAKE) -C $(BUILD_DIR)/$(KERNEL_DIR)/ all ARCH=um SUBARCH=$(SUBARCH) INSTALL_MOD_PATH="$(CURDIR)/$(MODULES_DIR)"
+	+$(MAKE) -C $(BUILD_DIR)/$(KERNEL_DIR)/ modules ARCH=um SUBARCH=$(SUBARCH) INSTALL_MOD_PATH="$(CURDIR)/$(MODULES_DIR)"
+	+$(MAKE) -C $(BUILD_DIR)/$(KERNEL_DIR)/ modules_install ARCH=um SUBARCH=$(SUBARCH) INSTALL_MOD_PATH="$(CURDIR)/$(MODULES_DIR)"
 	rm -f $(MODULES_DIR)/lib/modules/*/{source,build}
-	cp $(BUILD_DIR)/$(KERNEL_DIR)/linux $(BUILD_DIR)/$(PACKAGE_DIR)/netkit/kernel/netkit-kernel-$(SUBARCH)-$(KERNEL_RELEASE)-$(NK_KERNEL_RELEASE)
-	ln -fs netkit-kernel-$(SUBARCH)-$(KERNEL_RELEASE)-$(NK_KERNEL_RELEASE) $(BUILD_DIR)/$(PACKAGE_DIR)/netkit/kernel/netkit-kernel
+	cp $(BUILD_DIR)/$(KERNEL_DIR)/linux netkit-kernel-$(SUBARCH)-$(KERNEL_RELEASE)-$(NK_KERNEL_RELEASE)
+	ln -fs netkit-kernel-$(SUBARCH)-$(KERNEL_RELEASE)-$(NK_KERNEL_RELEASE) netkit-kernel
 
 .SILENT: $(INCLUDES_DIR)/usr
 $(INCLUDES_DIR)/usr: $(notdir $(DEBIAN_DEV_PACKAGES))
@@ -136,7 +115,7 @@ $(BUILD_DIR)/$(KERNEL_DIR)/.config: netkit-kernel-config-$(SUBARCH) $(BUILD_DIR)
 $(BUILD_DIR)/.unpacked: $(KERNEL_PACKAGE)
 	echo -e "\n\e[1m\e[32m======== Unpacking the kernel... =========\e[0m"
 	mkdir -p $(BUILD_DIR)
-	tar -C $(BUILD_DIR) -xjf $(KERNEL_PACKAGE)
+	unxz < $(KERNEL_PACKAGE) | tar -C $(BUILD_DIR) -xf -
 	: > $(BUILD_DIR)/.unpacked
 
 $(KERNEL_PACKAGE):
@@ -147,8 +126,7 @@ $(KERNEL_PACKAGE):
 package: ../netkit-kernel-$(NK_KERNEL_RELEASE).tar.bz2
 
 ../netkit-kernel-$(NK_KERNEL_RELEASE).tar.bz2: netkit-kernel
-	cp -rf README CHANGES Makefile.devel netkit-kernel-version netkit-kernel-config-i386 netkit-kernel-config-x86_64 patches/ $(BUILD_DIR)/$(PACKAGE_DIR)/netkit/kernel/
-	tar -C $(BUILD_DIR)/$(PACKAGE_DIR) -cjf ../netkit-kernel-$(SUBARCH)-$(NK_KERNEL_RELEASE).tar.bz2 netkit/kernel
+	tar --exclude=".*" --exclude="CVS" --exclude=".svn" --exclude="$(BUILD_DIR)" --exclude="$(INCLUDES_DIR)" --exclude="*.tar.bz2" --exclude="*.tar.gz" --exclude="*.deb" -C ../.. -cjf ../netkit-kernel-$(SUBARCH)-$(NK_KERNEL_RELEASE).tar.bz2 netkit/kernel
 
 .PHONY: clean
 clean:
