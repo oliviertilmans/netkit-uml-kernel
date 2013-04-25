@@ -23,9 +23,9 @@ diff -Naur linux-2.6.26.5/arch/um/drivers/net_kern.c linux-2.6.26.5-patched/arch
 +#include <linux/scatterlist.h>
 +#include "os.h"
 +
- static inline void set_ether_mac(struct net_device *dev, unsigned char *addr)
- {
- 	memcpy(dev->dev_addr, addr, ETH_ALEN);
+ #define DRIVER_NAME "uml-netdev"
+
+ static DEFINE_SPINLOCK(opened_lock);
 @@ -306,10 +312,49 @@
  #endif
  }
