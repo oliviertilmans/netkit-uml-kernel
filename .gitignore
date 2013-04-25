@@ -1,3 +1,4 @@
 build
 linux-*.xz
-modules
+netkit-kernel-config-i386-*
+netkit-kernel-config-x86_64-*
