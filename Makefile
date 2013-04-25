@@ -25,7 +25,6 @@ INCLUDES_DIR=include
 
 # Target architecture of the UML kernel binary file. Valid values include:
 # i386, ia64, ppc, and x86_64
-#SUBARCH?=x86_64
 SUBARCH?=i386
 
 # Kernel release
@@ -120,4 +119,8 @@ package: ../netkit-kernel-$(NK_KERNEL_RELEASE).tar.bz2
 .PHONY: clean
 clean:
 	-rm -fr $(BUILD_DIR) netkit-kernel netkit-kernel-*-K*.* netkit-kernel-config-*-K*.* $(INCLUDES_DIR)/* $(MODULES_DIR) *.deb
+
+.PHONY: clean-all
+clean-all: clean
+	-rm -fr $(KERNEL_PACKAGE) ../netkit-kernel-$(SUBARCH)-$(NK_KERNEL_RELEASE).tar.bz2
 
