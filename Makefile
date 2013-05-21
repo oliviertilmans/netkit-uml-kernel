@@ -23,16 +23,12 @@ MODULES_DIR=modules
 PATCHES_DIR=patches
 INCLUDES_DIR=include
 
-# Target architecture of the UML kernel binary file. Valid values include:
-# i386, ia64, ppc, and x86_64
-SUBARCH?=i386
+include Makefile.config
 
-# Kernel release
-KERNEL_RELEASE?=3.2.39
-
-# URL of the kernel tarball, if required
-KERNEL_SUFFIX=.tar.xz
-KERNEL_URL=http://www.kernel.org/pub/linux/kernel/v3.x/linux-$(KERNEL_RELEASE)$(KERNEL_SUFFIX)
+export $(SUBARCH)
+export $(KERNEL_RELEASE)
+export $(KERNEL_SUFFIX)
+export $(KERNEL_URL)
 
 ##############################################################################
 ## Settings below these lines should in general never be touched.
@@ -118,7 +114,7 @@ package: ../netkit-kernel-$(NK_KERNEL_RELEASE).tar.bz2
 
 .PHONY: clean
 clean:
-	-rm -fr $(BUILD_DIR) netkit-kernel netkit-kernel-*-K*.* netkit-kernel-config-*-K*.* $(INCLUDES_DIR)/* $(MODULES_DIR) *.deb
+	-rm -fr $(BUILD_DIR) netkit-kernel-config-*-K*.*
 
 .PHONY: clean-all
 clean-all: clean
