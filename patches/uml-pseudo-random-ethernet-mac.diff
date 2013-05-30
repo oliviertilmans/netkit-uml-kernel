@@ -98,7 +98,7 @@ diff -Naur linux-3.8.5-pristine/arch/um/drivers/net_kern.c linux-3.8.5/arch/um/d
  
  	if (str == NULL)
  		goto random;
-@@ -337,9 +382,25 @@
+@@ -337,9 +382,26 @@
  	return 0;
  
  random:
@@ -106,6 +106,7 @@ diff -Naur linux-3.8.5-pristine/arch/um/drivers/net_kern.c linux-3.8.5/arch/um/d
  	printk(KERN_INFO
  	       "Choosing a random ethernet address for device %s\n", name);
  	eth_random_addr(addr);
++#else
 +	printk(KERN_INFO
 +	       "Computing a digest to use as ethernet address for device %s\n", name);
 +	if (compute_hash(get_umid(), name, hash)) {
