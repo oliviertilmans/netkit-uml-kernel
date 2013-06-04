@@ -71,7 +71,7 @@ help:
 kernel: netkit-kernel
 
 .SILENT: netkit-kernel
-netkit-kernel: $(BUILD_DIR)/.patched $(BUILD_DIR)/$(KERNEL_DIR)/.config
+netkit-kernel: $(BUILD_DIR)/$(KERNEL_DIR)/.config
 	echo -e "\n\e[1m\e[32m========= Compiling the kernel... ========\e[0m"
 	mkdir -p $(BUILD_DIR)/$(PACKAGE_DIR)/netkit/kernel
 	+$(MAKE) -C $(BUILD_DIR)/$(KERNEL_DIR)/ all ARCH=um SUBARCH=$(SUBARCH) INSTALL_MOD_PATH="../../$(BUILD_DIR)/$(PACKAGE_DIR)/netkit/kernel/$(MODULES_DIR)"
@@ -81,25 +81,25 @@ netkit-kernel: $(BUILD_DIR)/.patched $(BUILD_DIR)/$(KERNEL_DIR)/.config
 	cp $(BUILD_DIR)/$(KERNEL_DIR)/linux $(BUILD_DIR)/$(PACKAGE_DIR)/netkit/kernel/netkit-kernel-$(SUBARCH)-$(KERNEL_RELEASE)-$(NK_KERNEL_RELEASE)
 	ln -fs netkit-kernel-$(SUBARCH)-$(KERNEL_RELEASE)-$(NK_KERNEL_RELEASE) $(BUILD_DIR)/$(PACKAGE_DIR)/netkit/kernel/netkit-kernel
 
-.SILENT: $(BUILD_DIR)/.patched
-$(BUILD_DIR)/.patched: $(BUILD_DIR)/.unpacked
+.SILENT: $(BUILD_DIR)/$(KERNEL_DIR)/.patched
+$(BUILD_DIR)/$(KERNEL_DIR)/.patched: $(BUILD_DIR)/$(KERNEL_DIR)/.unpacked
 	echo -e "\n\e[1m\e[32m==========  Applying patches... ==========\e[0m"
 	cd $(CURDIR)/$(BUILD_DIR)/$(KERNEL_DIR) && find "$(CURDIR)/$(PATCHES_DIR)" -name "*.diff" -type f -print -exec /bin/sh -c "patch -p1 < "{} ';'
-	: > $(BUILD_DIR)/.patched
+	: > $(BUILD_DIR)/$(KERNEL_DIR)/.patched
 
 .SILENT: $(BUILD_DIR)/$(KERNEL_DIR)/.config
-$(BUILD_DIR)/$(KERNEL_DIR)/.config: netkit-kernel-config-$(SUBARCH) $(BUILD_DIR)/.patched
+$(BUILD_DIR)/$(KERNEL_DIR)/.config: netkit-kernel-config-$(SUBARCH) $(BUILD_DIR)/$(KERNEL_DIR)/.patched
 	echo -e "\n\e[1m\e[32m======= Configuring the kernel... ========\e[0m"
 	ln -fs netkit-kernel-config-$(SUBARCH) netkit-kernel-config-$(SUBARCH)-$(KERNEL_RELEASE)-$(NK_KERNEL_RELEASE)
 	sed 's/CONFIG_LOCALVERSION=.*/CONFIG_LOCALVERSION="-netkit-$(NK_KERNEL_RELEASE)"/' netkit-kernel-config-$(SUBARCH) > $(BUILD_DIR)/$(KERNEL_DIR)/.config
 	+$(MAKE) -C $(BUILD_DIR)/$(KERNEL_DIR)/ silentoldconfig ARCH=um SUBARCH=$(SUBARCH)
 
-.SILENT: $(BUILD_DIR)/.unpacked
-$(BUILD_DIR)/.unpacked: $(KERNEL_PACKAGE)
+.SILENT: $(BUILD_DIR)/$(KERNEL_DIR)/.unpacked
+$(BUILD_DIR)/$(KERNEL_DIR)/.unpacked: $(KERNEL_PACKAGE)
 	echo -e "\n\e[1m\e[32m======== Unpacking the kernel... =========\e[0m"
 	mkdir -p $(BUILD_DIR)
 	unxz < $(KERNEL_PACKAGE) | tar -C $(BUILD_DIR) -xf -
-	: > $(BUILD_DIR)/.unpacked
+	: > $(BUILD_DIR)/$(KERNEL_DIR)/.unpacked
 
 $(KERNEL_PACKAGE):
 	echo -e "\n\e[1m\e[33m====== Retrieving kernel tarball... ======\e[0m"
