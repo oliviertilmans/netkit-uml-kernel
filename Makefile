@@ -84,7 +84,7 @@ netkit-kernel: $(BUILD_DIR)/$(KERNEL_DIR)/.config
 .SILENT: $(BUILD_DIR)/$(KERNEL_DIR)/.patched
 $(BUILD_DIR)/$(KERNEL_DIR)/.patched: $(BUILD_DIR)/$(KERNEL_DIR)/.unpacked
 	echo -e "\n\e[1m\e[32m==========  Applying patches... ==========\e[0m"
-	cd $(CURDIR)/$(BUILD_DIR)/$(KERNEL_DIR) && find "$(CURDIR)/$(PATCHES_DIR)" -name "*.diff" -type f -print -exec /bin/sh -c "patch -p1 < "{} ';'
+	cd $(CURDIR)/$(BUILD_DIR)/$(KERNEL_DIR) && find "$(CURDIR)/$(PATCHES_DIR)" -name "*.diff" -type f -print0 | xargs -I '{}' -0 -n 1 /bin/sh -c "patch -p1 < '{}'"
 	: > $(BUILD_DIR)/$(KERNEL_DIR)/.patched
 
 .SILENT: $(BUILD_DIR)/$(KERNEL_DIR)/.config
