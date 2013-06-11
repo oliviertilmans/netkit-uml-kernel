@@ -107,11 +107,11 @@ diff -aur linux-3.9.4-orig/arch/um/drivers/net_kern.c linux-3.9.4/arch/um/driver
  	eth_hw_addr_random(dev);
 +#else
 +	printk(KERN_INFO
-+	       "Computing a digest to use as ethernet address for device %s\n", str);
-+	if (compute_hash(get_umid(), str, hash)) {
++	       "Computing a digest to use as ethernet address for device %s\n", dev->name);
++	if (compute_hash(get_umid(), dev->name, hash)) {
 +		printk(KERN_WARNING
 +		       "Could not compute digest to use as ethernet address for device %s. "
-+		       "Using random address instead.\n", str);
++		       "Using random address instead.\n", dev->name);
 +		random_ether_addr(addr);
 +	}
 +	else {
